@@ -6,11 +6,12 @@ import Menu from '../Screens/HomeScreen/Menu';
 import DatunScreen from '../Screens/DatunScreen';
 import Pb3rScreen from '../Screens/Pb3rScreen';
 import DetailPerkara from '../Screens/Pb3rScreen/DetailPerkara';
-import PelayananHukum from '../Screens/DatunScreen/PelayananHukum';
 import FormYa from '../Screens/Pb3rScreen/FormYa';
 import FormTidak from '../Screens/Pb3rScreen/FormTidak';
 import ViewFormYa from '../Screens/Pb3rScreen/ViewFormYa';
 import ViewFormTidak from '../Screens/Pb3rScreen/ViewFormTidak';
+import ViewBantuanHukum from '../Screens/DatunScreen/ViewBantuanHukum';
+import ViewPelayananHukum from '../Screens/DatunScreen/ViewPelayananHukum';
 
 const Stack = createStackNavigator();
 const HomeNavigation = () => {
@@ -27,7 +28,8 @@ const HomeNavigation = () => {
       <Stack.Screen name="FormTidak" component={FormTidak} />
       <Stack.Screen name="ViewFormYa" component={ViewFormYa} />
       <Stack.Screen name="ViewFormTidak" component={ViewFormTidak} />
-      <Stack.Screen name="pel-hukum" component={PelayananHukum} />
+      <Stack.Screen name="pel-hukum" component={ViewPelayananHukum} />
+      <Stack.Screen name="ban-hukum" component={ViewBantuanHukum} />
     </Stack.Navigator>
   );
 };

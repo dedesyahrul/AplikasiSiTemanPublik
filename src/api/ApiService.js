@@ -3,6 +3,7 @@ import {
   API_BASE_URL,
   IMAGES_ENDPOINT,
   DATA_PERKARA_ENDPOINT,
+  FILE_SURAT_KUASA,
   PENGAMBILAN_BARANG_BUKTI_ENDPOINT,
 } from './ApiConfig';
 
@@ -107,5 +108,19 @@ export const storePengambilanBarangBukti = async (barangBuktiId, data) => {
       );
     }
     throw new Error(`Error storing pengambilan barang bukti: ${error.message}`);
+  }
+};
+
+export const fetchSuratKuasa = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}${FILE_SURAT_KUASA}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching surat kuasa:', error);
+    throw new Error(
+      `Error fetching surat kuasa: ${
+        error.response ? error.response.data.message : error.message
+      }`,
+    );
   }
 };

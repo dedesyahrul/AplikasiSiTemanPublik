@@ -393,7 +393,6 @@ const FormYa = ({perkara}) => {
 const styles = StyleSheet.create({
   formContainer: {
     padding: 20,
-    backgroundColor: Colors.light,
   },
   formField: {
     marginBottom: 15,

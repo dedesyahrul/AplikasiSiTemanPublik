@@ -3,21 +3,28 @@ import {View, StyleSheet, Alert, ScrollView, Linking} from 'react-native';
 import {Input, Button, Card} from 'react-native-elements';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
+import Colors from '../../../utils/Colors';
 
 // Validation schema
 const validationSchema = Yup.object().shape({
-  name: Yup.string().required('Name is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
+  name: Yup.string().required('Nama diperlukan'),
+  address: Yup.string().required('Alamat diperlukan'),
   phone: Yup.string()
-    .matches(/^[0-9]+$/, 'Must be only digits')
-    .min(10, 'Phone number must be at least 10 digits')
-    .required('Phone number is required'),
-  query: Yup.string().required('Query is required'),
+    .matches(/^[0-9]+$/, 'Harus berupa angka')
+    .min(10, 'Nomor HP harus minimal 10 digit')
+    .required('Nomor HP diperlukan'),
+  query: Yup.string().required('Pertanyaan diperlukan'),
 });
 
 const PelayananHukum = () => {
   const sendMessageToWhatsApp = values => {
-    const message = `Name: ${values.name}\nEmail: ${values.email}\nPhone: ${values.phone}\nQuery: ${values.query}`;
+    const message = `
+    Dari User : SI TEMAN PUBLIK
+    KEJAKSAAN NEGERI TANJUNG JABUNG TIMUR
+    ==================
+    Pelayanan Hukum
+    =================\n\n
+    Nama: ${values.name}\nAlamat: ${values.address}\nNomor HP: ${values.phone}\nPertanyaan: ${values.query}\n\nPesan ini dikirim melalui aplikasi Pelayanan Hukum (SI TEMAN PUBLIK).`;
     const phoneNumber = '6281248292233';
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
       message,
@@ -25,20 +32,20 @@ const PelayananHukum = () => {
 
     Linking.openURL(url)
       .then(() => {
-        Alert.alert('Success', 'WhatsApp Opened');
+        Alert.alert('Sukses', 'WhatsApp terbuka');
       })
       .catch(() => {
-        Alert.alert('Error', 'Make sure WhatsApp is installed on your device');
+        Alert.alert('Error', 'Pastikan WhatsApp terpasang di perangkat Anda');
       });
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.card}>
-        <Card.Title style={styles.cardTitle}>Pelayanan Hukum</Card.Title>
+        <Card.Title style={styles.cardTitle}>Ajukan Pertanyaan</Card.Title>
         <Card.Divider />
         <Formik
-          initialValues={{name: '', email: '', phone: '', query: ''}}
+          initialValues={{name: '', address: '', phone: '', query: ''}}
           validationSchema={validationSchema}
           onSubmit={(values, {resetForm}) => {
             sendMessageToWhatsApp(values);
@@ -54,7 +61,7 @@ const PelayananHukum = () => {
           }) => (
             <>
               <Input
-                placeholder="Name"
+                placeholder="Nama"
                 leftIcon={{type: 'font-awesome', name: 'user'}}
                 onChangeText={handleChange('name')}
                 onBlur={handleBlur('name')}
@@ -64,18 +71,19 @@ const PelayananHukum = () => {
                 inputStyle={styles.input}
               />
               <Input
-                placeholder="Email"
-                leftIcon={{type: 'font-awesome', name: 'envelope'}}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values.email}
-                keyboardType="email-address"
-                errorMessage={touched.email && errors.email ? errors.email : ''}
+                placeholder="Alamat"
+                leftIcon={{type: 'font-awesome', name: 'map-marker'}}
+                onChangeText={handleChange('address')}
+                onBlur={handleBlur('address')}
+                value={values.address}
+                errorMessage={
+                  touched.address && errors.address ? errors.address : ''
+                }
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
               />
               <Input
-                placeholder="Phone Number"
+                placeholder="Nomor HP"
                 leftIcon={{type: 'font-awesome', name: 'phone'}}
                 onChangeText={handleChange('phone')}
                 onBlur={handleBlur('phone')}
@@ -86,7 +94,7 @@ const PelayananHukum = () => {
                 inputStyle={styles.input}
               />
               <Input
-                placeholder="Query"
+                placeholder="Pertanyaan"
                 leftIcon={{type: 'font-awesome', name: 'question-circle'}}
                 onChangeText={handleChange('query')}
                 onBlur={handleBlur('query')}
@@ -96,7 +104,7 @@ const PelayananHukum = () => {
                 inputStyle={styles.input}
               />
               <Button
-                title="Submit"
+                title="Kirim"
                 onPress={handleSubmit}
                 buttonStyle={styles.button}
                 containerStyle={styles.buttonContainer}
@@ -114,7 +122,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f0f4f7',
   },
   card: {
     borderRadius: 10,
@@ -145,7 +152,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#3498db',
+    backgroundColor: Colors.primary,
     borderRadius: 10,
     paddingVertical: 10,
   },
