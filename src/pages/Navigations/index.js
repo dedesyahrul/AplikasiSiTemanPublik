@@ -22,7 +22,9 @@ export default function Navigations() {
         component={HomeNavigation}
         options={{
           tabBarLabel: ({color}) => (
-            <Text style={{color: color, fontSize: 12, marginTop: -7}}>
+            <Text
+              style={{color: color, fontSize: 12, marginTop: -7}}
+              allowFontScaling={false}>
               Beranda
             </Text>
           ),
@@ -50,7 +52,9 @@ export default function Navigations() {
         component={Abouts}
         options={{
           tabBarLabel: ({color}) => (
-            <Text style={{color: color, fontSize: 12, marginTop: -7}}>
+            <Text
+              style={{color: color, fontSize: 12, marginTop: -7}}
+              allowFontScaling={false}>
               Tentang
             </Text>
           ),

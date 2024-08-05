@@ -29,13 +29,23 @@ const ViewFormTidak = () => {
 
   const downloadFile = async () => {
     if (!fileUrl) {
-      Alert.alert('Error', 'File URL is not available');
+      Alert.alert('Error', 'URL file tidak tersedia');
       return;
     }
 
     const downloadDest = `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
     try {
+      // Memeriksa apakah file sudah ada
+      const fileExists = await RNFS.exists(downloadDest);
+      if (fileExists) {
+        Alert.alert(
+          'File sudah ada',
+          `File ${fileName} sudah ada di direktori download.`,
+        );
+        return;
+      }
+
       const options = {
         fromUrl: fileUrl,
         toFile: downloadDest,
@@ -47,20 +57,20 @@ const ViewFormTidak = () => {
         .then(res => {
           if (res.statusCode === 200) {
             Alert.alert(
-              'Success',
-              `File downloaded successfully and saved to: ${downloadDest}`,
+              'Sukses',
+              `File berhasil diDownload dan disimpan di: ${downloadDest}`,
             );
           } else {
-            Alert.alert('Error', 'File download failed');
+            Alert.alert('Error', 'Gagal Download file');
           }
         })
         .catch(err => {
           console.error('Error in downloading file:', err);
-          Alert.alert('Error', 'File download failed');
+          Alert.alert('Error', 'Gagal Download file');
         });
     } catch (error) {
       console.error('Error downloading file:', error);
-      Alert.alert('Error', 'File download failed');
+      Alert.alert('Error', 'Gagal Download file');
     }
   };
 
@@ -86,7 +96,8 @@ const ViewFormTidak = () => {
               color: Colors.primary,
               fontSize: 15,
               textDecorationLine: 'underline',
-            }}>
+            }}
+            allowFontScaling={false}>
             Silahkan Download Form Surat Kuasa disini
           </Text>
         </TouchableOpacity>

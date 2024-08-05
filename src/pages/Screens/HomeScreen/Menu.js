@@ -51,9 +51,25 @@ const Menu = () => {
         console.log('Menu Datun pressed');
         navigation.navigate('Datun');
         break;
+      case '2':
+        console.log('Menu Pidum pressed');
+        navigation.navigate('pidum-screen');
+        break;
+      case '3':
+        console.log('Menu Pidsus pressed');
+        navigation.navigate('pidsus-screen');
+        break;
       case '4':
         console.log('Menu PB3R pressed');
         navigation.navigate('pb3r-screen');
+        break;
+      case '5':
+        console.log('Menu Intelijen pressed');
+        navigation.navigate('intelijen-screen');
+        break;
+      case '6':
+        console.log('Menu Pembinaan pressed');
+        navigation.navigate('pembinaan-screen');
         break;
       default:
         break;
@@ -74,7 +90,9 @@ const Menu = () => {
             style={[styles.menuItem, {width: itemWidth}]}
             onPress={() => handleMenuPress(item.id)}>
             <Image source={item.image} style={styles.menuImage} />
-            <Text style={styles.menuTitle}>{item.title}</Text>
+            <Text style={styles.menuTitle} allowFontScaling={false}>
+              {item.title}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>

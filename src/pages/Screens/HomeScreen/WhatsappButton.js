@@ -15,7 +15,9 @@ const WhatsappButton = () => {
     <TouchableOpacity onPress={handlePress} style={styles.buttonContainer}>
       <View style={styles.buttonContent}>
         <Icons name="whatsapp" size={30} style={styles.icon} />
-        <Text style={styles.buttonText}>Hubungi Kami via WhatsApp</Text>
+        <Text style={styles.buttonText} allowFontScaling={false}>
+          Hubungi Kami via WhatsApp
+        </Text>
       </View>
     </TouchableOpacity>
   );

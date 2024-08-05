@@ -5,11 +5,22 @@ import {
   DATA_PERKARA_ENDPOINT,
   FILE_SURAT_KUASA,
   PENGAMBILAN_BARANG_BUKTI_ENDPOINT,
+  WILAYAH_PENGANTARAN_ENDPOINT,
 } from './ApiConfig';
+
+const TOKEN = '1|59cvdn6cr8st62eXwgqV7aE4Y4PuGZpGc4uZKCoy';
+
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    Authorization: `Bearer ${TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+});
 
 export const fetchImages = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}${IMAGES_ENDPOINT}`);
+    const response = await axiosInstance.get(IMAGES_ENDPOINT);
     return response.data;
   } catch (error) {
     console.error('Error fetching images:', error);
@@ -25,8 +36,8 @@ export const fetchDataPerkara = async (method = 'GET', data = null) => {
   try {
     const response =
       method === 'GET'
-        ? await axios.get(`${API_BASE_URL}${DATA_PERKARA_ENDPOINT}`)
-        : await axios.post(`${API_BASE_URL}${DATA_PERKARA_ENDPOINT}`, data);
+        ? await axiosInstance.get(DATA_PERKARA_ENDPOINT)
+        : await axiosInstance.post(DATA_PERKARA_ENDPOINT, data);
 
     return response.data.dataPerkaras;
   } catch (error) {
@@ -41,8 +52,8 @@ export const fetchDataPerkara = async (method = 'GET', data = null) => {
 
 export const fetchDataPerkaraById = async itemId => {
   try {
-    const response = await axios.get(
-      `${API_BASE_URL}${DATA_PERKARA_ENDPOINT}/${itemId}`,
+    const response = await axiosInstance.get(
+      `${DATA_PERKARA_ENDPOINT}/${itemId}`,
     );
     return response.data;
   } catch (error) {
@@ -55,28 +66,23 @@ export const fetchDataPerkaraById = async itemId => {
   }
 };
 
-export const fetchPengambilanBarangBukti = async id => {
+export const fetchPengambilanBarangBukti = async itemId => {
   try {
-    const url = `${API_BASE_URL}${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}`;
-    console.log('Fetching URL:', url);
-    const response = await axios.get(url);
-    console.log('API Response Data:', response.data);
+    const response = await axiosInstance.get(
+      `${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}/create/${itemId}`,
+    );
     return response.data;
   } catch (error) {
-    console.error('Error fetching pengambilan barang bukti:', error);
-    throw new Error(
-      `Error fetching pengambilan barang bukti: ${
-        error.response ? error.response.data.message : error.message
-      }`,
-    );
+    console.error('API Error:', error);
+    throw error;
   }
 };
 
 export const createPengambilanBarangBukti = async (barangBuktiId, data) => {
   try {
-    const url = `${API_BASE_URL}${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}/create/${barangBuktiId}`;
+    const url = `${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}/create/${barangBuktiId}`;
     console.log('Creating URL:', url);
-    const response = await axios.post(url, data);
+    const response = await axiosInstance.post(url, data);
     console.log('API Response Data:', response.data);
     return response.data;
   } catch (error) {
@@ -89,31 +95,37 @@ export const createPengambilanBarangBukti = async (barangBuktiId, data) => {
   }
 };
 
-export const storePengambilanBarangBukti = async (barangBuktiId, data) => {
+export const storePengambilanBarangBukti = async (itemId, formData) => {
   try {
-    const url = `${API_BASE_URL}${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}/store/${barangBuktiId}`;
-    console.log('Storing URL:', url);
-    console.log('Payload:', JSON.stringify(data, null, 2)); // Tambahkan logging payload
-    const response = await axios.post(url, data);
-    console.log('API Response Data:', response.data);
+    const response = await axiosInstance.post(
+      `${PENGAMBILAN_BARANG_BUKTI_ENDPOINT}/store/${itemId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
     return response.data;
   } catch (error) {
-    console.error('Error storing pengambilan barang bukti:', error);
-    if (error.response) {
-      console.error('Error Response Data:', error.response.data); // Log detail error response
-      throw new Error(
-        `Error storing pengambilan barang bukti: ${
-          error.response.data.message || error.response.statusText
-        }`,
-      );
-    }
-    throw new Error(`Error storing pengambilan barang bukti: ${error.message}`);
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const fetchWilayahPengantar = async () => {
+  try {
+    const response = await axiosInstance.get(WILAYAH_PENGANTARAN_ENDPOINT);
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
   }
 };
 
 export const fetchSuratKuasa = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}${FILE_SURAT_KUASA}`);
+    const response = await axiosInstance.get(FILE_SURAT_KUASA);
     return response.data;
   } catch (error) {
     console.error('Error fetching surat kuasa:', error);

@@ -32,7 +32,8 @@ const ViewPelayananHukum = () => {
               color: Colors.light,
               fontSize: 24,
               fontFamily: 'Outfit-SemiBold',
-            }}>
+            }}
+            allowFontScaling={false}>
             Pelayanan Hukum
           </Text>
         </TouchableOpacity>

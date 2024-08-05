@@ -26,20 +26,25 @@ const HeaderPb3r = ({onSearch}) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back-outline" size={30} color="white" />
-            <Text style={styles.headerTitle}>PB3R</Text>
+            <Text style={styles.headerTitle} allowFontScaling={false}>
+              PB3R
+            </Text>
           </TouchableOpacity>
           <View style={styles.titleContainer}>
-            <Text style={styles.mainTitle}>Pengembalian Barang Bukti</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.mainTitle} allowFontScaling={false}>
+              Pengembalian Barang Bukti
+            </Text>
+            <Text style={styles.subtitle} allowFontScaling={false}>
               Lacak Status Barang Bukti disini
             </Text>
           </View>
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Cari Nama Tersangka"
+              placeholder="Cari Nama Terpidana/No. Putusan Perkara"
               placeholderTextColor={Colors.secondary}
               onChangeText={onSearch}
+              allowFontScaling={false}
             />
           </View>
         </View>

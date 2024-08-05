@@ -9,8 +9,12 @@ const TeamMember = ({name, role, image}) => {
       <View style={styles.memberImageContainer}>
         <Image source={image} style={styles.memberImage} />
       </View>
-      <Text style={styles.memberName}>{name}</Text>
-      <Text style={styles.memberRole}>{role}</Text>
+      <Text style={styles.memberName} allowFontScaling={false}>
+        {name}
+      </Text>
+      <Text style={styles.memberRole} allowFontScaling={false}>
+        {role}
+      </Text>
     </View>
   );
 };
@@ -18,7 +22,9 @@ const TeamMember = ({name, role, image}) => {
 const OurTeam = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Our Team</Text>
+      <Text style={styles.title} allowFontScaling={false}>
+        Our Team
+      </Text>
       <View style={styles.teamContainer}>
         <TeamMember
           name="Romy Heriyanto"

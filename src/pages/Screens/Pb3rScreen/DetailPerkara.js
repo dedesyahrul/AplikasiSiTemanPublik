@@ -16,6 +16,9 @@ const DetailPerkara = ({route}) => {
   const tanggalPutusan =
     dataPerkaras.length > 0 ? dataPerkaras[0].tanggal_putusan : '';
 
+  const petikanPutusan =
+    dataPerkaras.length > 0 ? dataPerkaras[0].petikan_putusan : '';
+
   return (
     <FlatList
       data={dataPerkaras}
@@ -25,6 +28,7 @@ const DetailPerkara = ({route}) => {
           namaTersangka={namaTersangka}
           nomorPutusan={nomorPutusan}
           tanggalPutusan={tanggalPutusan}
+          petikanPutusan={petikanPutusan}
         />
       }
       renderItem={({item}) => (
@@ -44,7 +48,8 @@ const DetailPerkara = ({route}) => {
                 fontFamily: 'Outfit-SemiBold',
                 color: Colors.dark,
                 fontSize: 15,
-              }}>
+              }}
+              allowFontScaling={false}>
               Persyaratan Ketentuan Berlaku :
             </Text>
             <Text
@@ -52,7 +57,8 @@ const DetailPerkara = ({route}) => {
                 fontFamily: 'Outfit-SemiBold',
                 color: Colors.secondary,
                 fontSize: 12,
-              }}>
+              }}
+              allowFontScaling={false}>
               Pelayanan Jaksa Ngartis hanya bisa dilakukan pada daerah ….
             </Text>
           </View>

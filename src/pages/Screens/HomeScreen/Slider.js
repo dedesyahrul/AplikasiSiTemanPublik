@@ -78,7 +78,7 @@ const Slider = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Memuat...</Text>
+        <Text allowFontScaling={false}>Memuat...</Text>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );

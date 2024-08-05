@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  react-native-app:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8081:8081"
+    environment:
+      - ANDROID_SDK_ROOT=/usr/local/android-sdk
+    command: yarn start

@@ -64,7 +64,7 @@ const DatunMenu = () => {
         break;
       case '5':
         console.log('Menu Penegakan Hukum pressed');
-        navigation.navigate('pen-hukum');
+        navigation.navigate('penegaka-hukum');
         break;
       default:
         break;
@@ -75,7 +75,9 @@ const DatunMenu = () => {
     <TouchableOpacity onPress={() => handlePress(item.id)}>
       <View style={styles.item}>
         <Image source={item.image} style={styles.image} />
-        <Text style={styles.title}>{item.name}</Text>
+        <Text style={styles.title} allowFontScaling={false}>
+          {item.name}
+        </Text>
       </View>
     </TouchableOpacity>
   );

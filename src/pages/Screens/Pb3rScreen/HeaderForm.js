@@ -22,7 +22,8 @@ const HeaderForm = () => {
             color: Colors.light,
             fontSize: 24,
             fontFamily: 'Outfit-SemiBold',
-          }}>
+          }}
+          allowFontScaling={false}>
           Pengambilan Barang Bukti
         </Text>
       </TouchableOpacity>

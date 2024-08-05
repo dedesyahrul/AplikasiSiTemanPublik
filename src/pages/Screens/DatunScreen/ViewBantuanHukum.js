@@ -25,7 +25,8 @@ const ViewBantuanHukum = () => {
               color: Colors.light,
               fontSize: 24,
               fontFamily: 'Outfit-SemiBold',
-            }}>
+            }}
+            allowFontScaling={false}>
             Bantuan Hukum
           </Text>
         </TouchableOpacity>

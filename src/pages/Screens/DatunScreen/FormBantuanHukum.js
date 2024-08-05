@@ -41,7 +41,9 @@ const FormBantuanHukum = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ajukan Bantuan Hukum</Text>
+      <Text style={styles.title} allowFontScaling={false}>
+        Ajukan Bantuan Hukum
+      </Text>
 
       <View style={styles.inputContainer}>
         <Icon name="business" size={24} color="gray" style={styles.icon} />
@@ -50,6 +52,7 @@ const FormBantuanHukum = () => {
           onChangeText={setInstitutionName}
           placeholder="Nama Instansi"
           style={styles.input}
+          allowFontScaling={false}
         />
       </View>
 
@@ -61,17 +64,26 @@ const FormBantuanHukum = () => {
           placeholder="Perihal Permohonan"
           style={styles.input}
           multiline
+          allowFontScaling={false}
         />
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleFilePicker}>
         <Icon name="file-upload" size={24} color="white" />
-        <Text style={styles.buttonText}>Upload File</Text>
+        <Text style={styles.buttonText} allowFontScaling={false}>
+          Upload File
+        </Text>
       </TouchableOpacity>
-      {file && <Text style={styles.fileName}>{file.name}</Text>}
+      {file && (
+        <Text style={styles.fileName} allowFontScaling={false}>
+          {file.name}
+        </Text>
+      )}
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Kirim</Text>
+        <Text style={styles.buttonText} allowFontScaling={false}>
+          Kirim
+        </Text>
       </TouchableOpacity>
     </View>
   );

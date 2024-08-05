@@ -42,7 +42,9 @@ const PelayananHukum = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.card}>
-        <Card.Title style={styles.cardTitle}>Ajukan Pertanyaan</Card.Title>
+        <Card.Title style={styles.cardTitle} allowFontScaling={false}>
+          Ajukan Pertanyaan
+        </Card.Title>
         <Card.Divider />
         <Formik
           initialValues={{name: '', address: '', phone: '', query: ''}}
@@ -69,6 +71,7 @@ const PelayananHukum = () => {
                 errorMessage={touched.name && errors.name ? errors.name : ''}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
+                allowFontScaling={false}
               />
               <Input
                 placeholder="Alamat"
@@ -81,6 +84,7 @@ const PelayananHukum = () => {
                 }
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
+                allowFontScaling={false}
               />
               <Input
                 placeholder="Nomor HP"
@@ -92,6 +96,7 @@ const PelayananHukum = () => {
                 errorMessage={touched.phone && errors.phone ? errors.phone : ''}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
+                allowFontScaling={false}
               />
               <Input
                 placeholder="Pertanyaan"
@@ -102,6 +107,7 @@ const PelayananHukum = () => {
                 errorMessage={touched.query && errors.query ? errors.query : ''}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
+                allowFontScaling={false}
               />
               <Button
                 title="Kirim"

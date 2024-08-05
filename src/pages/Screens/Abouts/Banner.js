@@ -4,19 +4,31 @@ import {
   ImageBackground,
   StyleSheet,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import React from 'react';
 
 const Banner = () => {
+  const handleContactUsPress = () => {
+    const instagramUrl = 'https://www.instagram.com/dedesyahh/';
+    Linking.openURL(instagramUrl).catch(err =>
+      console.error('An error occurred', err),
+    );
+  };
+
   return (
     <ImageBackground
       source={require('../../../assets/images/dev.png')}
       style={styles.imageBackground}>
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Contact Us</Text>
+        <TouchableOpacity style={styles.button} onPress={handleContactUsPress}>
+          <Text style={styles.buttonText} allowFontScaling={false}>
+            Contact Us
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.appName}>Si Teman Publik</Text>
+        <Text style={styles.appName} allowFontScaling={false}>
+          Si Teman Publik
+        </Text>
       </View>
     </ImageBackground>
   );

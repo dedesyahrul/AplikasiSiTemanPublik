@@ -23,7 +23,8 @@ const HeaderDatun = () => {
             color: Colors.light,
             fontSize: 24,
             fontFamily: 'Outfit-SemiBold',
-          }}>
+          }}
+          allowFontScaling={false}>
           DATUN
         </Text>
       </TouchableOpacity>

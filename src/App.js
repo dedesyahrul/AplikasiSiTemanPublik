@@ -1,26 +1,31 @@
-import React, {useState} from 'react';
-import {View, StyleSheet} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, StyleSheet, Platform} from 'react-native';
 import {StatusBar} from 'expo-status-bar';
 import {NavigationContainer} from '@react-navigation/native';
 import Navigations from './pages/Navigations';
-import ContinueButton from './pages/Components/ContinueButton'; // Impor komponen ContinueButton
 import Login from './pages/Login';
+import SplashScreen from 'react-native-splash-screen';
 
 const App = () => {
   const [isContinuePressed, setIsContinuePressed] = useState(false);
 
-  // Fungsi untuk menangani ketika tombol "Continue" ditekan
   const handleContinuePress = () => {
-    // Set isContinuePressed menjadi true
     setIsContinuePressed(true);
   };
 
+  useEffect(() => {
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      const timer = setTimeout(() => {
+        SplashScreen.hide();
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* Jika tombol "Continue" belum ditekan, tampilkan tombol "Continue" */}
       {!isContinuePressed && <Login onPress={handleContinuePress} />}
-
-      {/* Jika tombol "Continue" sudah ditekan, tampilkan halaman navigasi */}
       {isContinuePressed && (
         <>
           <StatusBar style="auto" />
@@ -37,7 +42,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#143FF0',
-    // paddingTop: 20,
   },
 });
 

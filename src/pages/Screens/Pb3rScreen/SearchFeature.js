@@ -25,10 +25,14 @@ const SearchFeature = () => {
         if (searchText !== '' && searchText.length >= 4) {
           setLoading(true); // Set loading to true before fetching data
           const result = await fetchDataPerkara('GET');
-          const filteredResult = result.filter(item =>
-            item.nama_tersangka
-              .toLowerCase()
-              .includes(searchText.toLowerCase()),
+          const filteredResult = result.filter(
+            item =>
+              item.nama_tersangka
+                .toLowerCase()
+                .includes(searchText.toLowerCase()) ||
+              item.no_putusan_perkara
+                .toLowerCase()
+                .includes(searchText.toLowerCase()),
           );
           setSearchResult(filteredResult);
           setLoading(false); // Set loading to false after data is fetched
@@ -77,7 +81,9 @@ const SearchFeature = () => {
                         fontFamily: 'Outfit-SemiBold',
                         color: Colors.dark,
                         fontSize: 19,
-                      }}>
+                        paddingRight: 70,
+                      }}
+                      allowFontScaling={false}>
                       {item.nama_tersangka}
                     </Text>
                     <Text
@@ -85,7 +91,8 @@ const SearchFeature = () => {
                         fontFamily: 'Outfit-Regular',
                         color: Colors.dark,
                         fontSize: 12,
-                      }}>
+                      }}
+                      allowFontScaling={false}>
                       No. Putusan Perkara : {item.no_putusan_perkara}
                     </Text>
                     <Text
@@ -93,7 +100,8 @@ const SearchFeature = () => {
                         fontFamily: 'Outfit-Regular',
                         color: Colors.dark,
                         fontSize: 12,
-                      }}>
+                      }}
+                      allowFontScaling={false}>
                       Tgl Putusan : {item.tanggal_putusan}
                     </Text>
                     <Text
@@ -101,10 +109,16 @@ const SearchFeature = () => {
                         fontFamily: 'Outfit-Regular',
                         color: Colors.dark,
                         fontSize: 12,
-                      }}>
+                        paddingRight: 60,
+                      }}
+                      allowFontScaling={false}>
                       Barang Bukti:{' '}
                       {item.barang_bukti
-                        .map(barang => barang.barang_bukti)
+                        .map(barang =>
+                          barang.jenis_barang_bukti
+                            .map(jenis => jenis.barang_bukti)
+                            .join(', '),
+                        )
                         .join(', ')}
                     </Text>
                   </View>
@@ -113,7 +127,9 @@ const SearchFeature = () => {
             )}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Tidak ada hasil ditemukan</Text>
+                <Text style={styles.emptyText} allowFontScaling={false}>
+                  Tidak ada hasil ditemukan
+                </Text>
               </View>
             )}
           />

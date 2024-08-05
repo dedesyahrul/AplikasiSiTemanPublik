@@ -16,7 +16,8 @@ export default function Header() {
               color: Colors.light,
               fontSize: 20,
               fontFamily: 'Outfit-Regular',
-            }}>
+            }}
+            allowFontScaling={false}>
             Selamat Datang,
           </Text>
           <Text
@@ -24,7 +25,8 @@ export default function Header() {
               color: Colors.light,
               fontSize: 15,
               fontFamily: 'Outfit-Regular',
-            }}>
+            }}
+            allowFontScaling={false}>
             Kejari Tanjung Jabung Timur
           </Text>
         </View>

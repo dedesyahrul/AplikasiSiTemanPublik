@@ -4,7 +4,7 @@ import {View, Text, StyleSheet} from 'react-native';
 const Description = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.description}>
+      <Text style={styles.description} allowFontScaling={false}>
         {'Aplikasi Si Teman Publik Kejaksaan Negeri Tanjung Jabung Timur adalah sebuah platform teknologi yang dirancang khusus untuk memberikan kemudahan, transparansi, dan keandalan dalam memberikan pelayanan kepada masyarakat di wilayah Kejaksaan Negeri Tanjung Jabung Timur.\n\n' +
           'Dengan aplikasi ini, masyarakat akan merasakan manfaat berupa kemudahan dalam mengakses berbagai layanan yang disediakan oleh kejaksaan. Melalui beberapa sentuhan di perangkat mereka, mereka dapat memperoleh informasi yang relevan tentang layanan yang tersedia, prosedur yang harus diikuti, dan waktu yang diperlukan untuk menyelesaikan berbagai proses hukum.\n\n' +
           'Aplikasi ini juga didesain dengan inovasi sebagai fokus utama. Dalam perkembangannya, aplikasi akan terus diperbarui untuk mengakomodasi kebutuhan masyarakat yang semakin berkembang, sehingga setiap pelayanan bisa menjadi lebih efisien dan efektif.\n\n' +

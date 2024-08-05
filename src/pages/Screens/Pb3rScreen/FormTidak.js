@@ -9,21 +9,30 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import Colors from '../../../utils/Colors';
 import DocumentPicker from 'react-native-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import axios from 'axios';
 import {useRoute} from '@react-navigation/native';
 import {Picker as RNPicker} from '@react-native-picker/picker';
+import RNPickerSelect from 'react-native-picker-select';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   fetchPengambilanBarangBukti,
   storePengambilanBarangBukti,
+  fetchWilayahPengantar,
 } from './../../../api/ApiService';
+import {format, addHours} from 'date-fns';
+import {id as localeId} from 'date-fns/locale';
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
 const FormField = ({label, children}) => (
   <View style={styles.formField}>
-    <Text style={styles.label}>{label}</Text>
+    <Text style={styles.label} allowFontScaling={false}>
+      {label}
+    </Text>
     {children}
   </View>
 );
@@ -40,6 +49,22 @@ const FilePicker = ({label, onFileSelect}) => {
             const result = await DocumentPicker.pick({
               type: [DocumentPicker.types.allFiles],
             });
+            const fileSize = result[0].size;
+            console.log(`Ukuran file yang dipilih: ${fileSize} byte`);
+
+            if (fileSize > MAX_FILE_SIZE) {
+              Alert.alert(
+                'Error',
+                `Ukuran file maksimal adalah ${(
+                  MAX_FILE_SIZE /
+                  (1024 * 1024)
+                ).toFixed(2)} MB. File yang Anda pilih memiliki ukuran ${(
+                  fileSize /
+                  (1024 * 1024)
+                ).toFixed(2)} MB.`,
+              );
+              return;
+            }
             setFileName(result[0].name);
             onFileSelect(result);
           } catch (err) {
@@ -50,9 +75,18 @@ const FilePicker = ({label, onFileSelect}) => {
             }
           }
         }}>
-        <Text style={styles.fileButtonText}>Upload {label}</Text>
+        <Text style={styles.fileButtonText} allowFontScaling={false}>
+          Upload {label}
+        </Text>
       </TouchableOpacity>
-      {fileName ? <Text style={styles.fileName}>{fileName}</Text> : null}
+      {fileName ? (
+        <Text style={styles.fileName} allowFontScaling={false}>
+          {fileName}
+        </Text>
+      ) : null}
+      <Text style={styles.fileSizeInfo} allowFontScaling={false}>
+        Maksimum ukuran file: {(MAX_FILE_SIZE / (1024 * 1024)).toFixed(2)} MB
+      </Text>
     </FormField>
   );
 };
@@ -73,15 +107,13 @@ const FormTidak = () => {
     surat_kuasa: '',
     penerima_surat_kuasa: '',
   });
-
   const [file, setFile] = useState({
     foto_ktp_kk_sim: null,
     penerima_kuasa: null,
     surat_kuasa: null,
     penerima_surat_kuasa: null,
   });
-
-  const [pengambilan, setPengambilan] = useState(null);
+  const [metodePengambilan, setMetodePengambilan] = useState(null);
   const [tanggalPengantaran, setTanggalPengantaran] = useState(new Date());
   const [tanggalPengantaranVisible, setTanggalPengantaranVisible] =
     useState(false);
@@ -91,24 +123,21 @@ const FormTidak = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-
   const [wilayahPengantar, setWilayahPengantar] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const json = await fetchPengambilanBarangBukti(itemId);
-        const filteredData = json.find(item => item.barang_bukti_id === itemId);
-        if (filteredData) {
-          setData(prevData => ({
-            ...prevData,
-            ...filteredData,
-          }));
-          if (filteredData.tanggal_pengantaran) {
-            setTanggalPengantaran(new Date(filteredData.tanggal_pengantaran));
-          }
-          setPengambilan(filteredData.metode_pengambilan);
-        }
+        const response = await fetchPengambilanBarangBukti(itemId);
+        const {barangBukti, namaTersangka, wilayahPengantars} = response;
+
+        setData(prevData => ({
+          ...prevData,
+          nama_tersangka: namaTersangka,
+          barangBuktiId: barangBukti.id,
+        }));
+
+        setWilayahPengantar(wilayahPengantars);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -118,18 +147,16 @@ const FormTidak = () => {
   }, [itemId]);
 
   useEffect(() => {
-    const fetchWilayahPengantar = async () => {
+    const fetchWilayah = async () => {
       try {
-        const response = await axios.get(
-          'https://stp.kejaritanjabtim.com/api/v1/wilayah_pengantar',
-        );
-        setWilayahPengantar(response.data);
+        const response = await fetchWilayahPengantar();
+        setWilayahPengantar(response);
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchWilayahPengantar();
+    fetchWilayah();
   }, []);
 
   const showDatePicker = setter => {
@@ -152,7 +179,7 @@ const FormTidak = () => {
   };
 
   const handleCheckboxPress = value => {
-    setPengambilan(value);
+    setMetodePengambilan(value);
   };
 
   const handleSubmit = async () => {
@@ -168,18 +195,18 @@ const FormTidak = () => {
         data.nama_pengambil_barang_bukti,
       );
       formData.append('nomor_hp', data.nomor_hp);
-      formData.append('metode_pengambilan', pengambilan);
-      if (pengambilan === 'Diantar') {
+      formData.append('metode_pengambilan', metodePengambilan);
+      if (metodePengambilan === 'Diantar') {
         formData.append('wilayah_pengantar', data.wilayah_pengantar);
         formData.append('alamat_pengantaran', data.alamat_pengantaran);
         formData.append(
           'tanggal_pengantaran',
-          tanggalPengantaran.toISOString().split('T')[0],
+          addHours(tanggalPengantaran, 7).toISOString().split('T')[0],
         );
-      } else if (pengambilan === 'Ambil Sendiri') {
+      } else if (metodePengambilan === 'Ambil Sendiri') {
         formData.append(
           'tanggal_pengantaran',
-          tanggalPengambilan.toISOString().split('T')[0],
+          addHours(tanggalPengambilan, 7).toISOString().split('T')[0],
         );
       }
       if (file.foto_ktp_kk_sim) {
@@ -211,32 +238,28 @@ const FormTidak = () => {
         });
       }
 
-      const response = await axios.post(
-        `https://stp.kejaritanjabtim.com/api/v1/pengambilan_barang_bukti/store/${itemId}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      const response = await storePengambilanBarangBukti(itemId, formData);
       setIsSuccess(true);
 
-      // Buat pesan WhatsApp menggunakan data dari form
       const message = `
         Data Sukses Terkirim:
-        Nama Tersangka: ${data.nama_tersangka}
+        -Pengambilan Barang Bukti-
+        Nama Terpidana: ${data.nama_tersangka}
         Nama Pengambil Barang Bukti: ${data.nama_pengambil_barang_bukti}
         Nomor HP: ${data.nomor_hp}
-        Metode Pengambilan: ${pengambilan}
+        Metode Pengambilan: ${metodePengambilan}
         ${
-          pengambilan === 'Diantar'
+          metodePengambilan === 'Diantar'
             ? `Wilayah Pengantar: ${
                 data.wilayah_pengantar
               }\nAlamat Pengantaran: ${
                 data.alamat_pengantaran
-              }\nTanggal Pengantaran: ${tanggalPengantaran.toDateString()}`
-            : `Tanggal Pengambilan: ${tanggalPengambilan.toDateString()}`
+              }\nTanggal Pengantaran: ${format(tanggalPengantaran, 'PPPP', {
+                locale: localeId,
+              })}`
+            : `Tanggal Pengambilan: ${format(tanggalPengambilan, 'PPPP', {
+                locale: localeId,
+              })}`
         }
       `;
 
@@ -269,7 +292,9 @@ const FormTidak = () => {
   if (isSuccess) {
     return (
       <View style={styles.successContainer}>
-        <Text style={styles.successText}>Data Sukses Terkirim</Text>
+        <Text style={styles.successText} allowFontScaling={false}>
+          Data Sukses Terkirim
+        </Text>
       </View>
     );
   }
@@ -277,19 +302,23 @@ const FormTidak = () => {
   return (
     <ScrollView contentContainerStyle={styles.formContainer}>
       {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Text style={styles.errorText} allowFontScaling={false}>
+          {errorMessage}
+        </Text>
       ) : null}
-      <FormField label="Nama Tersangka">
+      <FormField label="Nama Terpidana">
         <TextInput
           style={styles.input}
-          value={data.nama_tersangka}
-          placeholder="Masukkan nama tersangka"
-          onChangeText={text => handleInputChange('nama_tersangka', text)}
+          value={data.nama_tersangka || ''}
+          placeholder="Masukkan nama terpidana"
+          editable={false}
+          allowFontScaling={false}
         />
       </FormField>
       <FormField label="Nama Pengambilan Barang Bukti">
         <TextInput
           style={styles.input}
+          allowFontScaling={false}
           value={data.nama_pengambil_barang_bukti}
           placeholder="Masukkan nama pengambil barang bukti"
           onChangeText={text =>
@@ -301,68 +330,90 @@ const FormTidak = () => {
         <TextInput
           style={styles.input}
           value={data.nomor_hp}
+          allowFontScaling={false}
           placeholder="Masukkan nomor HP"
           keyboardType="phone-pad"
           onChangeText={text => handleInputChange('nomor_hp', text)}
         />
       </FormField>
-      <FormField label="Pengambilan">
+      <FormField label="Metode Pengambilan">
         <View style={styles.checkboxContainer}>
           <TouchableOpacity
             style={[
               styles.checkbox,
-              pengambilan === 'Diantar' && styles.checkboxSelected,
+              metodePengambilan === 'Diantar' && styles.checkedCheckbox,
             ]}
             onPress={() => handleCheckboxPress('Diantar')}>
             <Text
-              style={
-                pengambilan === 'Diantar' ? styles.checkboxTextSelected : null
-              }>
-              {pengambilan === 'Diantar' ? 'Diantar (Dipilih)' : 'Diantar'}
+              style={[
+                styles.checkboxText,
+                metodePengambilan === 'Diantar' && styles.checkedCheckboxText,
+              ]}
+              allowFontScaling={false}>
+              Diantar
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.checkbox,
-              pengambilan === 'Ambil Sendiri' && styles.checkboxSelected,
+              metodePengambilan === 'Ambil Sendiri' && styles.checkedCheckbox,
             ]}
             onPress={() => handleCheckboxPress('Ambil Sendiri')}>
             <Text
-              style={
-                pengambilan === 'Ambil Sendiri'
-                  ? styles.checkboxTextSelected
-                  : null
-              }>
-              {pengambilan === 'Ambil Sendiri'
-                ? 'Ambil Sendiri (Dipilih)'
-                : 'Ambil Sendiri'}
+              style={[
+                styles.checkboxText,
+                metodePengambilan === 'Ambil Sendiri' &&
+                  styles.checkedCheckboxText,
+              ]}
+              allowFontScaling={false}>
+              Ambil Sendiri
             </Text>
           </TouchableOpacity>
         </View>
       </FormField>
-      {pengambilan === 'Diantar' && (
+      {metodePengambilan === 'Diantar' && (
         <>
           <FormField label="Pilih Wilayah Pengantaran">
             <View style={styles.pickerContainer}>
-              <RNPicker
-                selectedValue={data.wilayah_pengantar}
-                style={styles.picker}
-                onValueChange={(itemValue, itemIndex) =>
+              <RNPickerSelect
+                onValueChange={itemValue =>
                   handleInputChange('wilayah_pengantar', itemValue)
-                }>
-                {wilayahPengantar.map(wilayah => (
-                  <RNPicker.Item
-                    key={wilayah.id}
-                    label={wilayah.nama}
-                    value={wilayah.nama}
-                  />
-                ))}
-              </RNPicker>
+                }
+                items={wilayahPengantar.map(wilayah => ({
+                  label: wilayah.nama,
+                  value: wilayah.nama,
+                }))}
+                style={{
+                  inputIOS: styles.picker,
+                  inputAndroid: styles.picker,
+                  iconContainer: {
+                    top: 10,
+                    right: 12,
+                  },
+                }}
+                useNativeAndroidPickerStyle={false}
+                textInputProps={{allowFontScaling: false}}
+                placeholder={{
+                  label: 'Pilih Wilayah Disini!',
+                  value: null,
+                  color: '#9EA0A4',
+                }}
+                Icon={() => {
+                  return (
+                    <Icon
+                      name="arrow-drop-down"
+                      size={24}
+                      style={styles.icon}
+                    />
+                  );
+                }}
+              />
             </View>
           </FormField>
           <FormField label="Alamat Pengantaran">
             <TextInput
               style={styles.input}
+              allowFontScaling={false}
               value={data.alamat_pengantaran}
               placeholder="Masukkan alamat pengantaran"
               onChangeText={text =>
@@ -374,7 +425,9 @@ const FormTidak = () => {
             <TouchableOpacity
               style={styles.dateInput}
               onPress={() => showDatePicker(setTanggalPengantaranVisible)}>
-              <Text>{tanggalPengantaran.toDateString()}</Text>
+              <Text allowFontScaling={false}>
+                {format(tanggalPengantaran, 'PPPP', {locale: localeId})}
+              </Text>
             </TouchableOpacity>
             {tanggalPengantaranVisible && (
               <DateTimePicker
@@ -394,13 +447,15 @@ const FormTidak = () => {
           </FormField>
         </>
       )}
-      {pengambilan === 'Ambil Sendiri' && (
+      {metodePengambilan === 'Ambil Sendiri' && (
         <>
           <FormField label="Tanggal Pengambilan">
             <TouchableOpacity
               style={styles.dateInput}
               onPress={() => showDatePicker(setTanggalPengambilanVisible)}>
-              <Text>{tanggalPengambilan.toDateString()}</Text>
+              <Text allowFontScaling={false}>
+                {format(tanggalPengambilan, 'PPPP', {locale: localeId})}
+              </Text>
             </TouchableOpacity>
             {tanggalPengambilanVisible && (
               <DateTimePicker
@@ -439,11 +494,13 @@ const FormTidak = () => {
       <TouchableOpacity
         style={[
           styles.submitButton,
-          !pengambilan && styles.submitButtonDisabled,
+          !metodePengambilan && styles.submitButtonDisabled,
         ]}
         onPress={handleSubmit}
-        disabled={!pengambilan}>
-        <Text style={styles.submitButtonText}>Kirim</Text>
+        disabled={!metodePengambilan}>
+        <Text style={styles.submitButtonText} allowFontScaling={false}>
+          Kirim
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -468,14 +525,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: Colors.light,
   },
-  dateInput: {
-    borderWidth: 1,
-    borderColor: Colors.secondary,
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: Colors.light,
-    justifyContent: 'center',
-  },
   checkboxContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -488,11 +537,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: Colors.light,
   },
-  checkboxSelected: {
+  checkedCheckbox: {
     backgroundColor: Colors.primary,
   },
-  checkboxTextSelected: {
+  checkboxText: {
+    color: Colors.dark,
+    fontFamily: 'Outfit-Medium',
+  },
+  checkedCheckboxText: {
     color: Colors.light,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: Colors.light,
+    justifyContent: 'center',
   },
   fileButton: {
     backgroundColor: Colors.primary,
@@ -506,6 +567,11 @@ const styles = StyleSheet.create({
   fileName: {
     marginTop: 10,
     color: Colors.dark,
+  },
+  fileSizeInfo: {
+    marginTop: 5,
+    color: '#666',
+    fontSize: 12,
   },
   submitButton: {
     marginTop: 20,

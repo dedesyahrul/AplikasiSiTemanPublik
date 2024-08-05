@@ -9,21 +9,30 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import Colors from '../../../utils/Colors';
 import DocumentPicker from 'react-native-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useRoute} from '@react-navigation/native';
-import axios from 'axios';
 import {Picker as RNPicker} from '@react-native-picker/picker';
+import RNPickerSelect from 'react-native-picker-select';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   fetchPengambilanBarangBukti,
   storePengambilanBarangBukti,
+  fetchWilayahPengantar,
 } from './../../../api/ApiService';
+import {format, addHours} from 'date-fns';
+import {id as localeId} from 'date-fns/locale';
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
 const FormField = ({label, children}) => (
   <View style={styles.formField}>
-    <Text style={styles.label}>{label}</Text>
+    <Text style={styles.label} allowFontScaling={false}>
+      {label}
+    </Text>
     {children}
   </View>
 );
@@ -40,24 +49,49 @@ const FilePicker = ({label, onFileSelect}) => {
             const result = await DocumentPicker.pick({
               type: [DocumentPicker.types.allFiles],
             });
+            const fileSize = result[0].size;
+            console.log(`Ukuran file yang dipilih: ${fileSize} byte`);
+
+            if (fileSize > MAX_FILE_SIZE) {
+              Alert.alert(
+                'Error',
+                `Ukuran file maksimal adalah ${(
+                  MAX_FILE_SIZE /
+                  (1024 * 1024)
+                ).toFixed(2)} MB. File yang Anda pilih memiliki ukuran ${(
+                  fileSize /
+                  (1024 * 1024)
+                ).toFixed(2)} MB.`,
+              );
+              return;
+            }
             setFileName(result[0].name);
             onFileSelect(result);
           } catch (err) {
             if (DocumentPicker.isCancel(err)) {
-              console.log('User cancelled the upload');
+              console.log('Pengguna membatalkan pengunggahan');
             } else {
               throw err;
             }
           }
         }}>
-        <Text style={styles.fileButtonText}>Upload {label}</Text>
+        <Text style={styles.fileButtonText} allowFontScaling={false}>
+          Upload {label}
+        </Text>
       </TouchableOpacity>
-      {fileName ? <Text style={styles.fileName}>{fileName}</Text> : null}
+      {fileName ? (
+        <Text style={styles.fileName} allowFontScaling={false}>
+          {fileName}
+        </Text>
+      ) : null}
+      <Text style={styles.fileSizeInfo} allowFontScaling={false}>
+        Maksimum ukuran file: {(MAX_FILE_SIZE / (1024 * 1024)).toFixed(2)} MB
+      </Text>
     </FormField>
   );
 };
 
-const FormYa = ({perkara}) => {
+const FormYa = () => {
   const route = useRoute();
   const {itemId} = route.params;
 
@@ -83,17 +117,16 @@ const FormYa = ({perkara}) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const json = await fetchPengambilanBarangBukti(itemId);
-        const filteredData = json.find(item => item.barang_bukti_id === itemId);
-        if (filteredData) {
-          setData(prevData => ({
-            ...prevData,
-            ...filteredData,
-          }));
-          if (filteredData.tanggal_pengantaran) {
-            setTanggalPengantaran(new Date(filteredData.tanggal_pengantaran));
-          }
-        }
+        const response = await fetchPengambilanBarangBukti(itemId);
+        const {barangBukti, namaTersangka, wilayahPengantars} = response;
+
+        setData(prevData => ({
+          ...prevData,
+          nama_tersangka: namaTersangka,
+          barangBuktiId: barangBukti.id,
+        }));
+
+        setWilayahPengantar(wilayahPengantars);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -103,18 +136,16 @@ const FormYa = ({perkara}) => {
   }, [itemId]);
 
   useEffect(() => {
-    const fetchWilayahPengantar = async () => {
+    const fetchWilayah = async () => {
       try {
-        const response = await axios.get(
-          'https://stp.kejaritanjabtim.com/api/v1/wilayah_pengantar',
-        );
-        setWilayahPengantar(response.data);
+        const response = await fetchWilayahPengantar();
+        setWilayahPengantar(response);
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchWilayahPengantar();
+    fetchWilayah();
   }, []);
 
   const showDatePicker = setter => {
@@ -160,7 +191,7 @@ const FormYa = ({perkara}) => {
       }
       formData.append(
         'tanggal_pengantaran',
-        tanggalPengantaran.toISOString().split('T')[0],
+        addHours(tanggalPengantaran, 7).toISOString().split('T')[0],
       );
       if (file) {
         formData.append('foto_ktp_kk_sim', {
@@ -170,21 +201,14 @@ const FormYa = ({perkara}) => {
         });
       }
 
-      const response = await axios.post(
-        `https://stp.kejaritanjabtim.com/api/v1/pengambilan_barang_bukti/store/${itemId}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      const response = await storePengambilanBarangBukti(itemId, formData);
       setIsSuccess(true);
 
       // Buat pesan WhatsApp menggunakan data dari form
       const message = `
         Data Sukses Terkirim:
-        Nama Tersangka: ${data.nama_tersangka}
+        -Pengambilan Barang Bukti-
+        Nama Terpidana: ${data.nama_tersangka}
         Nama Pengambil Barang Bukti: ${data.nama_pengambil_barang_bukti}
         Nomor HP: ${data.nomor_hp}
         Metode Pengambilan: ${metodePengambilan}
@@ -194,8 +218,12 @@ const FormYa = ({perkara}) => {
                 data.wilayah_pengantar
               }\nAlamat Pengantaran: ${
                 data.alamat_pengantaran
-              }\nTanggal Pengantaran: ${tanggalPengantaran.toDateString()}`
-            : `Tanggal Pengambilan: ${tanggalPengantaran.toDateString()}`
+              }\nTanggal Pengantaran: ${format(tanggalPengantaran, 'PPPP', {
+                locale: localeId,
+              })}`
+            : `Tanggal Pengambilan: ${format(tanggalPengantaran, 'PPPP', {
+                locale: localeId,
+              })}`
         }
       `;
 
@@ -205,6 +233,7 @@ const FormYa = ({perkara}) => {
       )}`;
       Linking.openURL(url);
     } catch (error) {
+      console.error(error);
       if (error.response && error.response.data) {
         setErrorMessage(error.response.data.message || 'Error submitting form');
       } else if (error.response) {
@@ -228,7 +257,9 @@ const FormYa = ({perkara}) => {
   if (isSuccess) {
     return (
       <View style={styles.successContainer}>
-        <Text style={styles.successText}>Data Sukses Terkirim</Text>
+        <Text style={styles.successText} allowFontScaling={false}>
+          Data Sukses Terkirim
+        </Text>
       </View>
     );
   }
@@ -236,19 +267,23 @@ const FormYa = ({perkara}) => {
   return (
     <ScrollView contentContainerStyle={styles.formContainer}>
       {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Text style={styles.errorText} allowFontScaling={false}>
+          {errorMessage}
+        </Text>
       ) : null}
-      <FormField label="Nama Tersangka">
+      <FormField label="Nama Terpidana">
         <TextInput
           style={styles.input}
           value={data.nama_tersangka || ''}
-          placeholder="Masukkan nama tersangka"
-          onChangeText={text => handleInputChange('nama_tersangka', text)}
+          placeholder="Masukkan nama terpidana"
+          editable={false}
+          allowFontScaling={false}
         />
       </FormField>
       <FormField label="Nama Pengambilan Barang Bukti">
         <TextInput
           style={styles.input}
+          allowFontScaling={false}
           value={data.nama_pengambil_barang_bukti || ''}
           placeholder="Masukkan nama pengambil barang bukti"
           onChangeText={text =>
@@ -259,6 +294,7 @@ const FormYa = ({perkara}) => {
       <FormField label="Nomor HP">
         <TextInput
           style={styles.input}
+          allowFontScaling={false}
           value={data.nomor_hp || ''}
           placeholder="Masukkan nomor HP"
           keyboardType="phone-pad"
@@ -277,7 +313,8 @@ const FormYa = ({perkara}) => {
               style={[
                 styles.checkboxText,
                 metodePengambilan === 'Diantar' && styles.checkedCheckboxText,
-              ]}>
+              ]}
+              allowFontScaling={false}>
               Diantar
             </Text>
           </TouchableOpacity>
@@ -292,7 +329,8 @@ const FormYa = ({perkara}) => {
                 styles.checkboxText,
                 metodePengambilan === 'Ambil Sendiri' &&
                   styles.checkedCheckboxText,
-              ]}>
+              ]}
+              allowFontScaling={false}>
               Ambil Sendiri
             </Text>
           </TouchableOpacity>
@@ -302,25 +340,45 @@ const FormYa = ({perkara}) => {
         <>
           <FormField label="Pilih Wilayah Pengantaran">
             <View style={styles.pickerContainer}>
-              <RNPicker
-                selectedValue={data.wilayah_pengantar}
-                style={styles.picker}
-                onValueChange={(itemValue, itemIndex) =>
+              <RNPickerSelect
+                onValueChange={itemValue =>
                   handleInputChange('wilayah_pengantar', itemValue)
-                }>
-                {wilayahPengantar.map(wilayah => (
-                  <RNPicker.Item
-                    key={wilayah.id}
-                    label={wilayah.nama}
-                    value={wilayah.nama}
-                  />
-                ))}
-              </RNPicker>
+                }
+                items={wilayahPengantar.map(wilayah => ({
+                  label: wilayah.nama,
+                  value: wilayah.nama,
+                }))}
+                style={{
+                  inputIOS: styles.picker,
+                  inputAndroid: styles.picker,
+                  iconContainer: {
+                    top: 10,
+                    right: 12,
+                  },
+                }}
+                useNativeAndroidPickerStyle={false}
+                textInputProps={{allowFontScaling: false}}
+                placeholder={{
+                  label: 'Pilih Wilayah Disini!',
+                  value: null,
+                  color: '#9EA0A4',
+                }}
+                Icon={() => {
+                  return (
+                    <Icon
+                      name="arrow-drop-down"
+                      size={24}
+                      style={styles.icon}
+                    />
+                  );
+                }}
+              />
             </View>
           </FormField>
           <FormField label="Alamat Pengantaran">
             <TextInput
               style={styles.input}
+              allowFontScaling={false}
               value={data.alamat_pengantaran || ''}
               placeholder="Masukkan alamat pengantaran"
               onChangeText={text =>
@@ -332,7 +390,9 @@ const FormYa = ({perkara}) => {
             <TouchableOpacity
               style={styles.dateInput}
               onPress={() => showDatePicker(setTanggalPengantaranVisible)}>
-              <Text>{tanggalPengantaran.toDateString()}</Text>
+              <Text allowFontScaling={false}>
+                {format(tanggalPengantaran, 'PPPP', {locale: localeId})}
+              </Text>
             </TouchableOpacity>
             {tanggalPengantaranVisible && (
               <DateTimePicker
@@ -357,7 +417,9 @@ const FormYa = ({perkara}) => {
           <TouchableOpacity
             style={styles.dateInput}
             onPress={() => showDatePicker(setTanggalPengantaranVisible)}>
-            <Text>{tanggalPengantaran.toDateString()}</Text>
+            <Text allowFontScaling={false}>
+              {format(tanggalPengantaran, 'PPPP', {locale: localeId})}
+            </Text>
           </TouchableOpacity>
           {tanggalPengantaranVisible && (
             <DateTimePicker
@@ -384,7 +446,9 @@ const FormYa = ({perkara}) => {
         ]}
         onPress={handleSubmit}
         disabled={!metodePengambilan}>
-        <Text style={styles.submitButtonText}>Kirim</Text>
+        <Text style={styles.submitButtonText} allowFontScaling={false}>
+          Kirim
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -451,6 +515,11 @@ const styles = StyleSheet.create({
   fileName: {
     marginTop: 10,
     color: Colors.dark,
+  },
+  fileSizeInfo: {
+    marginTop: 5,
+    color: '#666',
+    fontSize: 12,
   },
   submitButton: {
     marginTop: 20,
